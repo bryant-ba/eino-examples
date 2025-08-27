@@ -3,7 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
-	"math/rand"
+	"hash/fnv"
 
 	"github.com/cloudwego/eino/components/tool"
 	"github.com/cloudwego/eino/components/tool/utils"
@@ -72,7 +72,7 @@ type Hotel struct {
 // AttractionRequest represents a tourist attraction search request
 type AttractionRequest struct {
 	City     string `json:"city" jsonschema:"description=City to search attractions in"`
-	Category string `json:"category" jsonschema:"description=Category of attractions (museum, park, landmark, etc.)"`
+	Category string `json:"category" jsonschema:"description=Category of attractions (museum, park, landmark, historic site, etc.)"`
 }
 
 // AttractionResponse represents attraction search results
@@ -111,12 +111,13 @@ func NewWeatherTool(ctx context.Context) (tool.BaseTool, error) {
 				return &weather, nil
 			}
 
-			// Random weather for unknown cities
+			// Generate consistent weather for unknown cities based on city and date
 			conditions := []string{"Sunny", "Cloudy", "Rainy", "Overcast"}
+			hashInput := req.City + req.Date
 			return &WeatherResponse{
 				City:        req.City,
-				Temperature: rand.Intn(30) + 5, // 5-35°C
-				Condition:   conditions[rand.Intn(len(conditions))],
+				Temperature: consistentHashing(hashInput+"temp", 5, 35), // 5-35°C
+				Condition:   conditions[consistentHashing(hashInput+"cond", 0, len(conditions)-1)],
 				Date:        req.Date,
 			}, nil
 		})
@@ -134,14 +135,17 @@ func NewFlightSearchTool(ctx context.Context) (tool.BaseTool, error) {
 			airlines := []string{"Air China", "China Eastern", "China Southern", "United Airlines", "Delta"}
 
 			flights := make([]Flight, 3)
+			hashInput := req.From + req.To + req.Date
 			for i := 0; i < 3; i++ {
+				flightHash := fmt.Sprintf("%s%d", hashInput, i)
+				airlineIdx := consistentHashing(flightHash+"airline", 0, len(airlines)-1)
 				flights[i] = Flight{
-					Airline:   airlines[rand.Intn(len(airlines))],
-					FlightNo:  fmt.Sprintf("%s%d", airlines[rand.Intn(len(airlines))][:2], rand.Intn(9000)+1000),
-					Departure: fmt.Sprintf("%02d:%02d", rand.Intn(24), rand.Intn(60)),
-					Arrival:   fmt.Sprintf("%02d:%02d", rand.Intn(24), rand.Intn(60)),
-					Price:     rand.Intn(2000) + 500, // $500-2500
-					Duration:  fmt.Sprintf("%dh %dm", rand.Intn(12)+1, rand.Intn(60)),
+					Airline:   airlines[airlineIdx],
+					FlightNo:  fmt.Sprintf("%s%d", airlines[airlineIdx][:2], consistentHashing(flightHash+"flightno", 1000, 9999)),
+					Departure: fmt.Sprintf("%02d:%02d", consistentHashing(flightHash+"dephour", 0, 23), consistentHashing(flightHash+"depmin", 0, 59)),
+					Arrival:   fmt.Sprintf("%02d:%02d", consistentHashing(flightHash+"arrhour", 0, 23), consistentHashing(flightHash+"arrmin", 0, 59)),
+					Price:     consistentHashing(flightHash+"price", 500, 2500), // $500-2500
+					Duration:  fmt.Sprintf("%dh %dm", consistentHashing(flightHash+"durhour", 1, 12), consistentHashing(flightHash+"durmin", 0, 59)),
 				}
 			}
 
@@ -168,13 +172,15 @@ func NewHotelSearchTool(ctx context.Context) (tool.BaseTool, error) {
 			}
 
 			hotels := make([]Hotel, 4)
+			hashInput := req.City + req.CheckIn + req.CheckOut
 			for i := 0; i < 4; i++ {
+				hotelHash := fmt.Sprintf("%s%d", hashInput, i)
 				hotels[i] = Hotel{
-					Name:      fmt.Sprintf("%s %s", req.City, hotelNames[rand.Intn(len(hotelNames))]),
-					Rating:    float64(rand.Intn(30)+20) / 10.0, // 2.0-5.0
-					Price:     rand.Intn(300) + 50,              // $50-350 per night
+					Name:      fmt.Sprintf("%s %s", req.City, hotelNames[consistentHashing(hotelHash+"name", 0, len(hotelNames)-1)]),
+					Rating:    float64(consistentHashing(hotelHash+"rating", 20, 50)) / 10.0, // 2.0-5.0
+					Price:     consistentHashing(hotelHash+"price", 50, 350),                 // $50-350 per night
 					Location:  fmt.Sprintf("%s Downtown", req.City),
-					Amenities: amenities[rand.Intn(len(amenities))],
+					Amenities: amenities[consistentHashing(hotelHash+"amenities", 0, len(amenities)-1)],
 				}
 			}
 
@@ -193,9 +199,9 @@ func NewAttractionSearchTool(ctx context.Context) (tool.BaseTool, error) {
 			// Mock attraction data based on city
 			attractionsByCity := map[string][]Attraction{
 				"Beijing": {
-					{Name: "Forbidden City", Description: "Ancient imperial palace", Rating: 4.8, OpenHours: "8:30-17:00", TicketPrice: 60, Category: "landmark"},
+					{Name: "Forbidden City", Description: "Ancient imperial palace", Rating: 4.8, OpenHours: "8:30-17:00", TicketPrice: 60, Category: "historic site"},
 					{Name: "Great Wall", Description: "Historic fortification", Rating: 4.9, OpenHours: "6:00-18:00", TicketPrice: 45, Category: "landmark"},
-					{Name: "Temple of Heaven", Description: "Imperial sacrificial altar", Rating: 4.6, OpenHours: "6:00-22:00", TicketPrice: 35, Category: "landmark"},
+					{Name: "Temple of Heaven", Description: "Imperial sacrificial altar", Rating: 4.6, OpenHours: "6:00-22:00", TicketPrice: 35, Category: "park"},
 				},
 				"Paris": {
 					{Name: "Eiffel Tower", Description: "Iconic iron lattice tower", Rating: 4.7, OpenHours: "9:30-23:45", TicketPrice: 25, Category: "landmark"},
@@ -225,17 +231,19 @@ func NewAttractionSearchTool(ctx context.Context) (tool.BaseTool, error) {
 
 			// Generate random attractions for unknown cities
 			attractionNames := []string{"Central Museum", "City Park", "Historic Square", "Art Gallery", "Cultural Center"}
-			categories := []string{"museum", "park", "landmark", "gallery", "cultural"}
+			categories := []string{"museum", "park", "landmark", "historic site", "cultural"}
 
 			attractions := make([]Attraction, 3)
+			hashInput := req.City + req.Category
 			for i := 0; i < 3; i++ {
+				attractionHash := fmt.Sprintf("%s%d", hashInput, i)
 				attractions[i] = Attraction{
-					Name:        fmt.Sprintf("%s %s", req.City, attractionNames[rand.Intn(len(attractionNames))]),
+					Name:        fmt.Sprintf("%s %s", req.City, attractionNames[consistentHashing(attractionHash+"name", 0, len(attractionNames)-1)]),
 					Description: "Popular tourist attraction",
-					Rating:      float64(rand.Intn(20)+30) / 10.0, // 3.0-5.0
+					Rating:      float64(consistentHashing(attractionHash+"rating", 30, 50)) / 10.0, // 3.0-5.0
 					OpenHours:   "9:00-17:00",
-					TicketPrice: rand.Intn(50),
-					Category:    categories[rand.Intn(len(categories))],
+					TicketPrice: consistentHashing(attractionHash+"price", 0, 50),
+					Category:    categories[consistentHashing(attractionHash+"category", 0, len(categories)-1)],
 				}
 			}
 
@@ -266,4 +274,15 @@ func GetAllTravelTools(ctx context.Context) ([]tool.BaseTool, error) {
 	}
 
 	return []tool.BaseTool{weatherTool, flightTool, hotelTool, attractionTool}, nil
+}
+
+// consistentHashing implements consistent hashing using Go standard library hash/fnv
+func consistentHashing(s string, min, max int) int {
+	// Use FNV-1a hash algorithm from Go standard library
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	hash := h.Sum32()
+
+	// Map to range [min, max]
+	return min + int(hash)%(max-min+1)
 }
