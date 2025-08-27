@@ -273,7 +273,9 @@ func GetAllTravelTools(ctx context.Context) ([]tool.BaseTool, error) {
 		return nil, err
 	}
 
-	return []tool.BaseTool{weatherTool, flightTool, hotelTool, attractionTool}, nil
+	askForClarificationTool := NewAskForClarificationTool()
+
+	return []tool.BaseTool{weatherTool, flightTool, hotelTool, attractionTool, askForClarificationTool}, nil
 }
 
 // consistentHashing implements consistent hashing using Go standard library hash/fnv

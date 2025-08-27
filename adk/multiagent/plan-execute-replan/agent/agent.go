@@ -40,6 +40,7 @@ func NewExecutor(ctx context.Context) (adk.Agent, error) {
 				Tools: travelTools,
 			},
 		},
+		MaxStep: 20,
 
 		Instruction: `You are a travel research executor. 
 Execute each planning step by using available tools.
@@ -49,7 +50,7 @@ For hotel searches, use search_hotels tool.
 For attraction research, use search_attractions tool.
 Provide detailed results for each task.
 Cloud Call multiple tools to get the final result.
-When there isn't a tool for asking user's input, you could determine the input by yourself.`,
+No need to query user's opinion. you could make a decision for different options based on the information you have.'`,
 	})
 }
 

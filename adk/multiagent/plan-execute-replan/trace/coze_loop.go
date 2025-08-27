@@ -46,7 +46,7 @@ func StartRootSpan(client cozeloop.Client, ctx context.Context, input any) (
 		}
 	}
 
-	nCtx, span := cozeloop.StartSpan(ctx, "plan-execute-replan", "custom")
+	nCtx, span := client.StartSpan(ctx, "plan-execute-replan", "custom")
 	span.SetInput(ctx, input)
 
 	return nCtx, func(ctx context.Context, output any) {

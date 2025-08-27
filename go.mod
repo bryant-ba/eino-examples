@@ -4,6 +4,8 @@ go 1.24.0
 
 toolchain go1.24.4
 
+replace github.com/cloudwego/eino => /Users/bytedance/gocode/src/github.com/cloudwego/eino
+
 require (
 	github.com/bytedance/sonic v1.14.0
 	github.com/cloudwego/eino v0.5.0-alpha.8
@@ -17,6 +19,7 @@ require (
 	github.com/cloudwego/eino-ext/components/retriever/volc_vikingdb v0.0.0-20250319082935-6219ec437e56
 	github.com/cloudwego/eino-ext/components/tool/duckduckgo/v2 v2.0.0-20250707040601-2fab92740585
 	github.com/cloudwego/eino-ext/devops v0.1.7
+	github.com/coze-dev/cozeloop-go v0.1.7
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/getkin/kin-openapi v0.118.0
 	github.com/ollama/ollama v0.11.6
@@ -34,7 +37,6 @@ require (
 	github.com/cloudwego/eino-ext/libs/acl/openai v0.0.0-20250626133421-3c142631c961 // indirect
 	github.com/cohesion-org/deepseek-go v1.2.3 // indirect
 	github.com/corpix/uarand v0.2.0 // indirect
-	github.com/coze-dev/cozeloop-go v0.1.7 // indirect
 	github.com/coze-dev/cozeloop-go/spec v0.1.0 // indirect
 	github.com/dslipak/pdf v0.0.2 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
