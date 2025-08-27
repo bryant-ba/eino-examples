@@ -17,23 +17,15 @@
 package tools
 
 import (
+	"bufio"
 	"context"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/cloudwego/eino/components/tool"
 	"github.com/cloudwego/eino/components/tool/utils"
-	"github.com/cloudwego/eino/compose"
 )
-
-type askForClarificationOptions struct {
-	NewInput *string
-}
-
-func WithNewInput(input string) tool.Option {
-	return tool.WrapImplSpecificOptFn(func(t *askForClarificationOptions) {
-		t.NewInput = &input
-	})
-}
 
 type AskForClarificationInput struct {
 	Question string `json:"question" jsonschema:"description=The specific question you want to ask the user to get the missing information"`
@@ -44,11 +36,13 @@ func NewAskForClarificationTool() tool.InvokableTool {
 		"ask_for_clarification",
 		"Call this tool when the user's request is ambiguous or lacks the necessary information to proceed. Use it to ask a follow-up question to get the details you need, such as the book's genre, before you can use other tools effectively.",
 		func(ctx context.Context, input *AskForClarificationInput, opts ...tool.Option) (output string, err error) {
-			o := tool.GetImplSpecificOptions[askForClarificationOptions](nil, opts...)
-			if o.NewInput == nil {
-				return "", compose.NewInterruptAndRerunErr(input.Question)
-			}
-			return *o.NewInput, nil
+			fmt.Printf("\nQuestion: %s\n", input.Question)
+			scanner := bufio.NewScanner(os.Stdin)
+			fmt.Print("\nyour input here: ")
+			scanner.Scan()
+			fmt.Println()
+			nInput := scanner.Text()
+			return nInput, nil
 		})
 	if err != nil {
 		log.Fatal(err)
