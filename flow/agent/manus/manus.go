@@ -52,13 +52,13 @@ var (
 )
 
 func init() {
-	langfuseHost = "https://us.cloud.langfuse.com"
-	langfusePublicKey = "pk-lf-3c691fc2-1009-48dc-8aa0-ae3199c2e498"
-	langfuseSecretKey = "sk-lf-ba8f679a-7563-4493-9fe9-3cb628762105"
+	langfuseHost = 
+	langfusePublicKey =
+	langfuseSecretKey = 
 
-	deepseekAPIKey = "https://api.deepseek.com"
-	deepseekModel = "deepseek-chat"
-	deepseekBaseURL = "sk-6f9c7770ecb6436488b231bdc60a507b"
+	deepseekAPIKey = 
+	deepseekModel =
+	deepseekBaseURL =
 
 	input = "what is eino?"
 }
