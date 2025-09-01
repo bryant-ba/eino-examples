@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/cloudwego/eino-ext/callbacks/langfuse"
-	"github.com/cloudwego/eino-ext/components/model/openai"
+	"github.com/cloudwego/eino-ext/components/model/deepseek"
 	"github.com/cloudwego/eino-ext/components/tool/browseruse"
 	"github.com/cloudwego/eino-ext/components/tool/commandline"
 	"github.com/cloudwego/eino-ext/components/tool/commandline/sandbox"
@@ -44,21 +44,21 @@ var (
 	langfusePublicKey string
 	langfuseSecretKey string
 
-	openaiAPIKey  string
-	openaiModel   string
-	openaiBaseURL string
+	deepseekAPIKey  string
+	deepseekModel   string
+	deepseekBaseURL string
 
 	input string
 )
 
 func init() {
-	langfuseHost = os.Getenv("LANGFUSE_HOST")
-	langfusePublicKey = os.Getenv("LANGFUSE_PUBLIC_KEY")
-	langfuseSecretKey = os.Getenv("LANGFUSE_SECRET_KEY")
+	langfuseHost = "https://us.cloud.langfuse.com"
+	langfusePublicKey = "pk-lf-3c691fc2-1009-48dc-8aa0-ae3199c2e498"
+	langfuseSecretKey = "sk-lf-ba8f679a-7563-4493-9fe9-3cb628762105"
 
-	openaiAPIKey = os.Getenv("OPENAI_API_KEY")
-	openaiModel = os.Getenv("OPENAI_MODEL")
-	openaiBaseURL = os.Getenv("OPENAI_BASE_URL")
+	deepseekAPIKey = "https://api.deepseek.com"
+	deepseekModel = "deepseek-chat"
+	deepseekBaseURL = "sk-6f9c7770ecb6436488b231bdc60a507b"
 
 	input = "what is eino?"
 }
@@ -387,12 +387,10 @@ func newLangfuseHandler() (*langfuse.CallbackHandler, func()) {
 func newChatModel(ctx context.Context) model.ToolCallingChatModel {
 	var cm model.ToolCallingChatModel
 	var err error
-	var temp float32 = 0
-	cm, err = openai.NewChatModel(ctx, &openai.ChatModelConfig{
-		APIKey:      openaiAPIKey,
-		BaseURL:     openaiBaseURL,
-		Model:       openaiModel,
-		Temperature: &temp,
+	cm, err = deepseek.NewChatModel(ctx, &deepseek.ChatModelConfig{
+		APIKey:  deepseekAPIKey,
+		BaseURL: deepseekBaseURL,
+		Model:   deepseekModel,
 	})
 	if err != nil {
 		log.Fatal(err)
